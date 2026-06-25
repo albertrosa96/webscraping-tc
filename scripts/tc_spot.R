@@ -43,7 +43,7 @@ get_tc_spot <- function(frecuencia = "mensual", average_or_fp = "average") {
   
   url <- paste0(
     "https://cdn.bancentral.gov.do/documents/estadisticas/",
-    "mercado-cambiario/documents/TASA_DOLAR_REFERENCIA_MC.xlsx"
+    "mercado-cambiario/documents/TASA_DOLAR_REFERENCIA_MC.xlsx?v=1782392716322"
   )
   
   path <- tempfile(pattern = "", fileext = ".xlsx")

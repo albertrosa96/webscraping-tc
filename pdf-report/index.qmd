@@ -265,7 +265,7 @@ ac_tasas_to_table |>
 
 ::: {.callout-note title="Notas" appearance="simple"}
 
-1- Este sondeo diario del mercado cambiario extrae automáticamente las tasas de compra y venta desde las páginas web oficiales de entidades financieras.
+1- Este informe de Cotizaciones Cambiarias extrae automáticamente las tasas de compra y venta desde las páginas web oficiales de entidades financieras.
 
 2- Se utilizan promedios simples a lo largo del documento; solo la tasa de referencia del BCRD es una medida ponderada.
 

@@ -130,7 +130,7 @@ time_in_dr <-   Sys.time() |>
 <img class="logo" src="assets/logo-dorado.png">
 :::
 ::: {.g-col-10 .text-center .header-text}
-<h1>Sondeo diario del Mercado Cambiario</h1>
+<h1>Cotizaciones Cambiarias</h1>
 <h3>Departamento Internacional </h3>
 Subdirección de Asuntos Cambiarios Domésticos <br> `r current_date$label`
 :::

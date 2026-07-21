@@ -132,7 +132,7 @@ time_in_dr <-   Sys.time() |>
 ::: {.g-col-10 .text-center .header-text}
 <h1>Cotizaciones Cambiarias</h1>
 <h3>Departamento Internacional </h3>
-Subdirección de Asuntos Cambiarios Domésticos <br> `r current_date$label`
+Subdirección de Asuntos Cambiarios <br> `r current_date$label`
 :::
 :::
 

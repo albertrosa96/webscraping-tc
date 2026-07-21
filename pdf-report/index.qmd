@@ -1,5 +1,5 @@
 ---
-title: "Sondeo Diario Mercado Cambiario"
+title: "Cotizaciones Cambiarias"
 execute:
   echo: false    
   warning: false 

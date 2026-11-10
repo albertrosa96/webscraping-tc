@@ -1,27 +1,3 @@
-source("scripts/read_tc_data.R")
- 
-# ============================================================
-# COMPLETAR BANCO POPULAR
-# Comparación: 10 de noviembre vs. 06 de noviembre de 2026
-# ============================================================
- 
-# Banco Popular - viernes 06 de noviembre
-update_daily_tasa(
-  date = "2026-11-06",
-  target_bank = "Banco Popular",
-  compra = 58.00,
-  venta = 61.45
-)
- 
-# Banco Popular - martes 10 de noviembre
-update_daily_tasa(
-  date = "2026-11-10",
-  target_bank = "Banco Popular",
-  compra = 58.00,
-  venta = 61.45
-)
- 
-
 box::use(
   stringr[str_detect],
   dplyr[filter, select, mutate, arrange, group_by, ungroup, rename, left_join],

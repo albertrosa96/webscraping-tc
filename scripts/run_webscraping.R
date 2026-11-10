@@ -1,21 +1,3 @@
-# ============================================================
-# CORRECCIÓN BANCO POPULAR - 06 NOV 2026
-# Solo se ejecuta el 10 de noviembre de 2026
-# ============================================================
-
-if (Sys.Date() == as.Date("2026-11-10")) {
-
-  source("scripts/read_tc_data.R")
-
-  update_daily_tasa(
-    date = "2026-11-06",
-    target_bank = "Banco Popular",
-    compra = 58.00,
-    venta = 61.45
-  )
-
-}
-
 library(dplyr)
 library(stringr)
 library(purrr)
@@ -94,3 +76,23 @@ write_csv(historico_from_banks, "data/from_banks/_historico_from_banks.csv", na 
 log_success("📁 Historical data successfully updated.")
 
 log_info("Data extraction script completed successfully.")
+
+
+# ============================================================
+# CORRECCIÓN BANCO POPULAR - 06 NOV 2026
+# Solo se ejecuta el 10 de noviembre de 2026
+# ============================================================
+
+if (Sys.Date() == as.Date("2026-11-10")) {
+
+  source("scripts/read_tc_data.R")
+
+  update_daily_tasa(
+    date = "2026-11-06",
+    target_bank = "Banco Popular",
+    compra = 58.00,
+    venta = 61.45
+  )
+
+}
+

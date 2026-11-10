@@ -54,29 +54,6 @@ today <- Sys.time() |>
   floor_date("day") |>
   as.Date()
 
-# ============================================================
-# CORRECCIÓN TEMPORAL BANCO POPULAR - 10 NOV 2026
-# ============================================================
-
-if (
-  today == as.Date("2026-11-10") &&
-  !"Banco Popular" %in% tasas$bank
-) {
-
-  tasas <- dplyr::bind_rows(
-    tasas,
-    data.frame(
-      date = as.Date("2026-11-10"),
-      bank = "Banco Popular",
-      tipo = NA_character_,
-      buy = 58.00,
-      sell = 61.45
-    )
-  )
-
-  log_info("Banco Popular agregado manualmente para 2026-11-10.")
-}
-
 rds_file <- paste0("data/from_banks/rds/", today, ".rds")
 csv_file <- paste0("data/from_banks/csv/", today, ".csv")
 

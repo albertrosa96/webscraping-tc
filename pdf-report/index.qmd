@@ -261,7 +261,6 @@ ac_tasas_to_table |>
   report_table()
 ```
 
-\pagebreak
 
 ::: {.callout-note title="Notas" appearance="simple"}
 

@@ -77,132 +77,26 @@ tasa_dolar_scotiabank <- function() {
 #' Descarga la tasa de cambio de Banco Popular
 #' @export
 tasa_dolar_popular <- function() {
-
   BANCO <- "Banco Popular"
   URL <- "https://popularenlinea.com/personas/Paginas/Home.aspx"
-
-  logger::log_info("Downloading tasas {BANCO} -------------")
-  logger::log_info("Navegando a la página")
-
+  logger::log_info("Downloading tasas { BANCO } -------------")
+  logger::log_info("Naverga a la página")
   html <- rvest::read_html_live(URL)
-
-  # Dar tiempo a que cargue JavaScript
-  Sys.sleep(8)
-
+  Sys.sleep(5)
   on.exit({
-    try(html$session$close(), silent = TRUE)
-    Sys.sleep(1)
+    html$session$close()
+    Sys.sleep(2)
   })
-
+ 
   logger::log_info("Extrayendo las tasas")
-
-  tasa_compra <- html$session$Runtime$evaluate(
-    "
-    (function() {
-      const el = document.getElementById('compra_peso_dolar_modal');
-
-      if (el && el.value) {
-        return el.value;
-      }
-
-      const inputs = Array.from(document.querySelectorAll('input'));
-
-      const candidato = inputs.find(x => {
-        const txt =
-          (x.id || '') + ' ' +
-          (x.name || '') + ' ' +
-          (x.className || '');
-
-        return /compra.*dolar|dolar.*compra/i.test(txt);
-      });
-
-      return candidato ? candidato.value : null;
-    })()
-    "
-  )
-
-  tasa_venta <- html$session$Runtime$evaluate(
-    "
-    (function() {
-      const el = document.getElementById('venta_peso_dolar_modal');
-
-      if (el && el.value) {
-        return el.value;
-      }
-
-      const inputs = Array.from(document.querySelectorAll('input'));
-
-      const candidato = inputs.find(x => {
-        const txt =
-          (x.id || '') + ' ' +
-          (x.name || '') + ' ' +
-          (x.className || '');
-
-        return /venta.*dolar|dolar.*venta/i.test(txt);
-      });
-
-      return candidato ? candidato.value : null;
-    })()
-    "
-  )
-
+  tasa_compra <- html$session$Runtime$evaluate("document.getElementById('compra_peso_dolar_modal').value")
+  tasa_venta <- html$session$Runtime$evaluate("document.getElementById('venta_peso_dolar_modal').value")
   logger::log_info("Parsing results")
-
-  compra_raw <- tasa_compra$result$value
-  venta_raw  <- tasa_venta$result$value
-
-  # Si no encuentra las tasas, mostrar diagnóstico
-  if (
-    is.null(compra_raw) ||
-    is.null(venta_raw) ||
-    compra_raw == "" ||
-    venta_raw == ""
-  ) {
-
-    diagnostico <- html$session$Runtime$evaluate(
-      "
-      JSON.stringify(
-        Array.from(document.querySelectorAll('input'))
-          .map(el => ({
-            id: el.id,
-            name: el.name,
-            value: el.value
-          }))
-      )
-      "
-    )
-
-    logger::log_error(
-      "Inputs encontrados en Popular: {diagnostico$result$value}"
-    )
-
-    stop("No se pudieron encontrar las tasas de Banco Popular.")
-  }
-
-  compra <- as.numeric(
-    gsub(",", ".", compra_raw)
-  )
-
-  venta <- as.numeric(
-    gsub(",", ".", venta_raw)
-  )
-
-  if (
-    is.na(compra) ||
-    is.na(venta)
-  ) {
-
-    stop(
-      "Las tasas de Banco Popular no pudieron convertirse a número."
-    )
-  }
-
-  logger::log_success(
-    glue::glue(
-      "Tasas {BANCO} - venta: {venta}, compra: {compra}"
-    )
-  )
-
+  compra <- as.numeric(tasa_compra$result$value)
+  venta <- as.numeric(tasa_venta$result$value)
+ 
+  logger::log_success(glue::glue("Tasas {BANCO} - venta: {venta}, compra: {compra}"))
+ 
   data.frame(
     date = today_in_dr(),
     bank = BANCO,

@@ -56,7 +56,7 @@ today <- Sys.time() |>
 
 # CORRECCIÓN POPULAR - 11 NOV 2026
 if (
-  today == as.Date("2026-11-11") &&
+  today == as.Date("2026-11-10") &&
   !"Banco Popular" %in% tasas$bank
 ) {
 

@@ -77,26 +77,293 @@ tasa_dolar_scotiabank <- function() {
 #' Descarga la tasa de cambio de Banco Popular
 #' @export
 tasa_dolar_popular <- function() {
+
   BANCO <- "Banco Popular"
-  URL <- "https://popularenlinea.com/personas/Paginas/Home.aspx"
-  logger::log_info("Downloading tasas { BANCO } -------------")
-  logger::log_info("Naverga a la página")
+  URL <- "https://popularenlinea.com/calculadoras"
+
+  logger::log_info("Downloading tasas {BANCO} -------------")
+  logger::log_info("Navegando a Calculadoras")
+
   html <- rvest::read_html_live(URL)
+
+  # Esperar que cargue JavaScript
   Sys.sleep(5)
+
   on.exit({
-    html$session$close()
-    Sys.sleep(2)
+    try(html$session$close(), silent = TRUE)
+    Sys.sleep(1)
   })
- 
-  logger::log_info("Extrayendo las tasas")
-  tasa_compra <- html$session$Runtime$evaluate("document.getElementById('compra_peso_dolar_modal').value")
-  tasa_venta <- html$session$Runtime$evaluate("document.getElementById('venta_peso_dolar_modal').value")
+
+  # ==========================================================
+  # SELECCIONAR DÓLAR
+  # ==========================================================
+
+  logger::log_info("Seleccionando Dólar")
+
+  dolar_click <- html$session$Runtime$evaluate(
+    "
+    (function() {
+
+      const elementos = Array.from(
+        document.querySelectorAll('button, a, div, span')
+      );
+
+      const boton = elementos.find(el => {
+
+        const texto = (el.innerText || el.textContent || '')
+          .trim()
+          .toLowerCase();
+
+        const visible = el.offsetParent !== null;
+
+        return visible &&
+          (texto === '$ dolar' ||
+           texto === '$ dólar' ||
+           texto === 'dolar' ||
+           texto === 'dólar');
+
+      });
+
+      if (boton) {
+        boton.click();
+        return true;
+      }
+
+      return false;
+
+    })()
+    "
+  )
+
+  logger::log_info(
+    "Click Dólar realizado: {dolar_click$result$value}"
+  )
+
+  # Esperar a que se actualicen los valores
+  Sys.sleep(3)
+
+
+  # ==========================================================
+  # FUNCIÓN JAVASCRIPT PARA ENCONTRAR UNA TASA
+  # ==========================================================
+
+  js_compra <- "
+  (function() {
+
+    // Primero probar IDs antiguos por compatibilidad
+    const old =
+      document.getElementById('compra_peso_dolar_modal') ||
+      document.getElementById('compra_peso_dolar');
+
+    if (old && old.value) {
+      return old.value;
+    }
+
+    // Buscar sección visible 'Compramos'
+    const elementos = Array.from(
+      document.querySelectorAll('div, span, p, label, h1, h2, h3, h4, h5')
+    );
+
+    const titulo = elementos.find(el => {
+
+      const txt = (el.innerText || el.textContent || '')
+        .trim()
+        .toLowerCase();
+
+      return el.offsetParent !== null &&
+             txt === 'compramos';
+
+    });
+
+    if (!titulo) {
+      return null;
+    }
+
+    let nodo = titulo;
+
+    // Subir por el DOM hasta encontrar los inputs
+    for (let i = 0; i < 7; i++) {
+
+      if (!nodo) break;
+
+      const inputs = Array.from(
+        nodo.querySelectorAll('input')
+      ).filter(x => x.offsetParent !== null);
+
+      if (inputs.length >= 2) {
+
+        // Normalmente el primer input es US$
+        // y el segundo es el equivalente en RD$
+        const destino = inputs[inputs.length - 1];
+
+        if (destino && destino.value) {
+          return destino.value;
+        }
+      }
+
+      nodo = nodo.parentElement;
+    }
+
+    return null;
+
+  })()
+  "
+
+
+  js_venta <- "
+  (function() {
+
+    // Primero probar IDs antiguos por compatibilidad
+    const old =
+      document.getElementById('venta_peso_dolar_modal') ||
+      document.getElementById('venta_peso_dolar');
+
+    if (old && old.value) {
+      return old.value;
+    }
+
+    // Buscar sección visible 'Vendemos'
+    const elementos = Array.from(
+      document.querySelectorAll('div, span, p, label, h1, h2, h3, h4, h5')
+    );
+
+    const titulo = elementos.find(el => {
+
+      const txt = (el.innerText || el.textContent || '')
+        .trim()
+        .toLowerCase();
+
+      return el.offsetParent !== null &&
+             txt === 'vendemos';
+
+    });
+
+    if (!titulo) {
+      return null;
+    }
+
+    let nodo = titulo;
+
+    // Subir por el DOM hasta encontrar los inputs
+    for (let i = 0; i < 7; i++) {
+
+      if (!nodo) break;
+
+      const inputs = Array.from(
+        nodo.querySelectorAll('input')
+      ).filter(x => x.offsetParent !== null);
+
+      if (inputs.length >= 2) {
+
+        const destino = inputs[inputs.length - 1];
+
+        if (destino && destino.value) {
+          return destino.value;
+        }
+      }
+
+      nodo = nodo.parentElement;
+    }
+
+    return null;
+
+  })()
+  "
+
+
+  # ==========================================================
+  # EXTRAER LAS TASAS
+  # ==========================================================
+
+  logger::log_info("Extrayendo tasa de compra")
+
+  tasa_compra <- html$session$Runtime$evaluate(
+    js_compra
+  )
+
+  logger::log_info("Extrayendo tasa de venta")
+
+  tasa_venta <- html$session$Runtime$evaluate(
+    js_venta
+  )
+
+
+  compra_raw <- tasa_compra$result$value
+  venta_raw  <- tasa_venta$result$value
+
+
+  # ==========================================================
+  # DIAGNÓSTICO SI NO ENCUENTRA ALGUNA TASA
+  # ==========================================================
+
+  if (
+    is.null(compra_raw) ||
+    is.null(venta_raw) ||
+    compra_raw == "" ||
+    venta_raw == ""
+  ) {
+
+    diagnostico <- html$session$Runtime$evaluate(
+      "
+      JSON.stringify(
+        Array.from(document.querySelectorAll('input'))
+          .filter(x => x.offsetParent !== null)
+          .map(x => ({
+            id: x.id,
+            name: x.name,
+            value: x.value,
+            placeholder: x.placeholder
+          }))
+      )
+      "
+    )
+
+    logger::log_error(
+      "Inputs visibles Popular: {diagnostico$result$value}"
+    )
+
+    stop(
+      'No se pudieron encontrar las tasas de Banco Popular.'
+    )
+  }
+
+
+  # ==========================================================
+  # CONVERTIR A NÚMERO
+  # ==========================================================
+
   logger::log_info("Parsing results")
-  compra <- as.numeric(tasa_compra$result$value)
-  venta <- as.numeric(tasa_venta$result$value)
- 
-  logger::log_success(glue::glue("Tasas {BANCO} - venta: {venta}, compra: {compra}"))
- 
+
+  compra <- as.numeric(
+    gsub(",", ".", compra_raw)
+  )
+
+  venta <- as.numeric(
+    gsub(",", ".", venta_raw)
+  )
+
+
+  if (
+    is.na(compra) ||
+    is.na(venta)
+  ) {
+
+    stop(
+      "Las tasas de Banco Popular no pudieron convertirse a número."
+    )
+  }
+
+
+  # ==========================================================
+  # RESULTADO
+  # ==========================================================
+
+  logger::log_success(
+    glue::glue(
+      "Tasas {BANCO} - venta: {venta}, compra: {compra}"
+    )
+  )
+
   data.frame(
     date = today_in_dr(),
     bank = BANCO,
